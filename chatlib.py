@@ -38,8 +38,11 @@ def build_message(cmd, data):
     """
     # Implement code ...
     len_space = 16-len(cmd)
-
-    full_msg = cmd + (len_space * " ") + "|" + str(len(data)) + "|" + data
+    if len_space < 0:
+        return None
+    if len(data) > MAX_DATA_LENGTH:
+        return  None
+    full_msg = cmd + (len_space * " ") + DELIMITER + ("0"*(4-len(str(len(data))))) + str(len(data)) + DELIMITER + data
     return full_msg
 
 
@@ -48,12 +51,19 @@ def parse_message(data):
     Parses protocol message and returns command name and data field
     Returns: cmd (str), data (str). If some error occured, returns None, None
     """
-    split_data = data.split("|")
-    if len(split_data) != 3:
+    split_data = data.split(DELIMITER)
+    if len(split_data) < 3:
+        return None, None
+    try:
+        split_data[1] = split_data[1].strip()
+        split_data[1] = int(split_data[1])
+    except:
         return None, None
     cmd = split_data[0].strip()
-    msg = split_data[2]
-    if cmd == "" or "-" in split_data[1]:
+    msg = DELIMITER.join(split_data[2:])
+    if split_data[1] != len(msg):
+        return None, None
+    if cmd == "" or "-" in str(split_data[1]):
         return None, None
     return cmd, msg
     # Implement code ...
@@ -68,7 +78,7 @@ def split_msg(msg, expected_fields):
     using protocol's delimiter (|) and validates that there are correct number of fields.
     Returns: list of fields if all ok. If some error occured, returns None
     """
-    msg_split = msg.split("|")
+    msg_split = msg.split(DELIMITER)
     if len(msg_split) == expected_fields:
         return msg_split
     else:
@@ -90,14 +100,12 @@ def join_msg(msg_fields):
     """
     for i in range(len(msg_fields)):
         msg_fields[i] = str(msg_fields[i])
-    join_ms = msg_fields.join("|")
+    join_ms = msg_fields.join(DELIMITER)
     return join_ms
 
 
 
 
 # Implement code ...
-if __name__ == '__main__':
-    print_hi('PyCharm')
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
